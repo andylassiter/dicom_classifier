@@ -22,6 +22,8 @@ HEALTHCHECK NONE
 
 FROM base as final
 
+USER root
+
 # TODO: Not sure if nrgpackages/packages/tensorflow2.13-cpu is needed
 RUN mkdir -p /models/model_mirrir_1351062s_15Kt.10.04.2023 && \
     mkdir -p /models/model_fc_39374-600.03.20.2024 && \
@@ -32,6 +34,10 @@ RUN mkdir -p /models/model_mirrir_1351062s_15Kt.10.04.2023 && \
 COPY src /src
 COPY model_mirrir_1351062s_15Kt.10.04.2023 /models/model_mirrir_1351062s_15Kt.10.04.2023
 COPY model_fc_39374-600.03.20.2024 /models/model_fc_39374-600.03.20.2024
+
+RUN chown -R ${NB_UID}:${NB_GID} /models /output /input /resources
+
+USER ${NB_UID}
 
 ENV PYLIB=/src
 ENV PATH=/src:$PATH
