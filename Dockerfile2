@@ -1,0 +1,39 @@
+ARG JH_VERSION=3.0.0
+FROM jupyter/tensorflow-notebook:hub-$JH_VERSION as base
+
+USER root
+
+RUN apt-get update && \
+    apt-get clean && \
+    apt-get install -y dcmtk && \
+    rm -rf /var/lib/apt/lists/*
+
+USER ${NB_UID}
+
+COPY --chown=${NB_UID}:${NB_GID} requirements.txt /tmp/
+
+RUN python3 -m pip install --requirement /tmp/requirements.txt && \
+    jupyter lab build --minimize=False && \
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}" && \
+    rm /tmp/requirements.txt
+
+HEALTHCHECK NONE
+
+FROM base as final
+
+# TODO: Not sure if nrgpackages/packages/tensorflow2.13-cpu is needed
+RUN mkdir -p /models/model_mirrir_1351062s_15Kt.10.04.2023 && \
+    mkdir -p /models/model_fc_39374-600.03.20.2024 && \
+    mkdir -p /output && \
+    mkdir -p /input && \
+    mkdir -p /resources
+
+COPY src /src
+COPY model_mirrir_1351062s_15Kt.10.04.2023 /models/model_mirrir_1351062s_15Kt.10.04.2023
+COPY model_fc_39374-600.03.20.2024 /models/model_fc_39374-600.03.20.2024
+
+ENV PYLIB=/src
+ENV PATH=/src:$PATH
+
+WORKDIR /output
